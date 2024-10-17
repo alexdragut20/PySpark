@@ -1,76 +1,110 @@
-# PySpark
-=======
-# Project Overview
+# Data Processing and ETL Pipeline for Online Retail Dataset
 
-This project handles the ingestion, conversion, and initial cleaning of the "Online Retail" dataset from the UCI Machine Learning Repository.
+## Overview
+This project provides an end-to-end ETL pipeline to process, analyze, and transform the "Online Retail" dataset from the UCI Machine Learning Repository using PySpark. The pipeline includes data acquisition, cleaning, transformation, and analysis. Outputs are provided in various formats such as CSV and Parquet.
 
-### Requirements:
-Ensure you have installed the required libraries by running:
-```
-pip install -r requirements.txt
-```
+Key objectives include:
+- Acquiring and preparing the raw dataset
+- Performing data cleaning and quality checks
+- Applying analytical transformations to calculate total revenue, sales trends, and product popularity
+- Designing an efficient ETL pipeline for large-scale data processing
 
-## Step 1: Data Ingestion
+## Table of Contents
+- [Overview](#overview)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Classes Overview](#classes-overview)
+- [ETL Pipeline](#etl-pipeline)
+- [Project Structure](#project-structure)
+- [Outputs](#outputs)
+- [Testing](#testing)
+- [Requirements](#requirements)
+- [License](#license)
 
-The first step is to download the "Online Retail" dataset from the UCI Machine Learning Repository using a Python script.
+## Installation
+### Prerequisites
+1. Install Python 3.7 or above.
+2. Install PySpark and other necessary dependencies by running:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Usage:
-1. Navigate to the `src/ingestion/` directory:
-```
-cd src/ingestion
-```
-2. Run the `download_data.py` script:
-```
-python download_data.py
-```
+### Setup Instructions
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd <repository-directory>
+   ```
 
-This will download the dataset and save it as `data/raw/online_retail.xlsx`.
+2. Ensure you have Apache Spark installed on your system. You can download it from [https://spark.apache.org/downloads.html](https://spark.apache.org/downloads.html).
 
-## Step 2: Convert Excel to CSV
+3. Set up your Spark environment variables if needed:
+   ```bash
+   export SPARK_HOME=/path/to/spark
+   export PATH=$SPARK_HOME/bin:$PATH
+   ```
 
-The downloaded Excel file is then converted to CSV using the `DataConverter` class in the `src/ingestion/data_converter.py` script.
+## Usage
+To run the ETL pipeline and process the dataset:
+1. Place the input CSV file (`online_retail.csv`) inside the `data/processed/` directory.
+2. Run the pipeline using the following command:
+   ```bash
+   python etl_pipeline.py
+   ```
 
-### Usage:
-1. Navigate to the `src/ingestion/` directory:
-```
-cd src/ingestion
-```
-2. Run the `data_converter.py` script:
-```
-python data_converter.py
-```
+The processed data will be saved in the `data/processed/final_output` folder.
 
-This will convert the Excel file located at `data/raw/online_retail.xlsx` to a CSV file and save it in `data/processed/online_retail.csv`.
+## Classes Overview
 
-### Notes:
-1. **OOP Structure**: The `DataConverter` class is designed for flexibility and future enhancements. New methods can be added to handle different file formats or more complex conversions.
-2. **Best Practices**: The code checks for the existence of files, provides error handling, and uses `pandas` for conversion.
+### DataCleaner
+- **Purpose**: Handles data acquisition and preparation tasks.
+- **Key Methods**:
+  - `read_csv()`: Reads the raw CSV file into a PySpark DataFrame.
+  - `clean_data()`: Cleans the data by filling null values, converting types, and removing duplicates.
 
-## Step 3: Data Cleaning and Quality Checks
+### DataProcessor
+- **Purpose**: Performs data analysis and transformation.
+- **Key Methods**:
+  - `calculate_total_revenue_per_customer()`: Calculates total revenue per customer.
+  - `most_popular_product_per_country()`: Identifies the most popular product by quantity sold for each country.
+  - `calculate_monthly_sales_trend()`: Analyzes the monthly sales trend.
+  - `create_total_amount_column()`: Creates a `TotalAmount` column.
+  - `identify_customers_with_consecutive_orders()`: Identifies customers with consecutive orders.
 
-In this step, the CSV file is read using **PySpark** for initial data cleaning and quality checks:
-- **Handling null values**: Missing values for `CustomerID` are filled with `Unknown`, while `Quantity` and `UnitPrice` are filled with zeros.
-- **Date conversion**: The `InvoiceDate` column is converted to a proper date format for easier time-based analysis.
-- **Duplicate removal**: Duplicate rows are removed to ensure the data is clean.
+## ETL Pipeline
+The ETL pipeline performs the following steps:
+1. **Data Acquisition and Cleaning**: The raw data is read from a CSV file, cleaned to handle null values, and checked for duplicates.
+2. **Data Processing**:
+   - Calculate the total revenue per customer.
+   - Determine the most popular product by country.
+   - Analyze monthly sales trends.
+3. **Data Transformation**: 
+   - Create new columns like `TotalAmount` and `OrderMonth`.
+   - Calculate monthly order totals and identify customers with consecutive orders.
+4. **Output**: The processed data is saved in CSV and Parquet formats in the `final_output` directory.
 
-### Usage:
-1. Navigate to the `src/cleaning/` directory:
-```
-cd src/cleaning
-```
-2. Run the `data_cleaner.py` script:
-```
-python data_cleaner.py
-```
+## Project Structure
 
-This script reads the CSV file, cleans the data, and outputs a summary, including the schema and the first few rows of the cleaned DataFrame.
 
-### Notes:
-1. The script **does not save** the cleaned data to a file. Instead, it prints a summary to verify the cleaning steps.
-2. The focus is on ensuring data quality by handling missing values, converting data types, and removing duplicates.
 
-### Data Cleaning Decisions:
-- **Null Handling**: `CustomerID` is critical for customer analysis, so `Unknown` is used as a placeholder for missing values. Missing values in numeric fields (`Quantity`, `UnitPrice`) are replaced with zeros.
-- **Date Conversion**: The `InvoiceDate` is converted to a proper date type to ensure it can be used in time-based analysis.
-- **Duplicate Removal**: Duplicate rows can lead to inaccuracies in data analysis, so they are removed.
+## Outputs
+The processed data includes:
+- **total_revenue_per_customer.csv**: Total revenue per customer, ordered by revenue.
+- **most_popular_product_per_country.csv**: The most popular product in each country, ordered alphabetically.
+- **monthly_sales_trend.csv**: Total revenue per month.
+- **monthly_order_total.csv**: The monthly order total for each customer.
+- **customers_consecutive_orders.csv**: Customers who placed consecutive monthly orders.
+- **combined_customer_data.csv**: Customer data including total revenue, monthly order totals, and consecutive order tags.
+
+## Testing
+To test the output data:
+1. Run the provided `testing.py` script to convert the Parquet outputs into CSV and XLSX formats.
+2. Ensure that the processed data matches the expected structure and content.
+
+## Requirements
+- Python 3.7 or higher
+- Apache Spark
+- PySpark
+- Pandas
+- Requests
 
