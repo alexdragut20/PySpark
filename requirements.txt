@@ -1,0 +1,5 @@
+# Using requests>=2.32.3 to avoid vulnerability PYSEC-2023-74 (Proxy-Authorization header leak)
+requests>=2.32.3
+pandas
+openpyxl
+pyspark
