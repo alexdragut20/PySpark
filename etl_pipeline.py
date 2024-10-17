@@ -14,6 +14,7 @@ def save_as_single_csv(df, output_file):
     Save the given DataFrame as a single CSV file with proper naming.
     :param df: PySpark DataFrame to be saved.
     :param output_file: Output file path (excluding ".csv").
+    This approach was used because the basic use of saving to .csv was generating more useless files.
     """
     try:
         # Coalesce the DataFrame into a single partition
@@ -59,7 +60,7 @@ def etl_pipeline(input_file, output_path):
     # Initialize DataProcessor with the cleaned DataFrame
     processor = DataProcessor(cleaned_df)
 
-    # Task 1.2(a): Calculate total revenue per customer and save top 5 customers
+    # Calculate total revenue per customer and save top 5 customers in a separate .csv file
     try:
         logging.info("Calculating total revenue per customer...")
         customer_revenue_df = processor.calculate_total_revenue_per_customer(
@@ -71,7 +72,7 @@ def etl_pipeline(input_file, output_path):
         logging.error(f"Error calculating total revenue per customer: {e}")
         raise
 
-    # Task 1.2(b): Determine the most popular product by quantity sold for each country
+    # Determine the most popular product by quantity sold for each country and save in a separate .csv file
     try:
         logging.info("Determining the most popular product by quantity sold for each country...")
         most_popular_product_df = processor.most_popular_product_per_country(product_col="StockCode",
@@ -83,7 +84,7 @@ def etl_pipeline(input_file, output_path):
         logging.error(f"Error determining the most popular product: {e}")
         raise
 
-    # Task 1.2(c): Calculate the monthly sales trend
+    # Calculate the monthly sales trend and save in a separate .csv file
     try:
         logging.info("Calculating the monthly sales trend...")
         monthly_sales_df = processor.calculate_monthly_sales_trend(invoice_date_col="InvoiceDate",
@@ -94,7 +95,7 @@ def etl_pipeline(input_file, output_path):
         logging.error(f"Error calculating monthly sales trend: {e}")
         raise
 
-    # Task 2.1(a): Create a new column 'TotalAmount'
+    # Create a new column 'TotalAmount' and keeping in the main df
     try:
         logging.info("Creating 'TotalAmount' column by multiplying 'Quantity' and 'UnitPrice'...")
         processor.create_total_amount_column(quantity_col="Quantity", unit_price_col="UnitPrice")
@@ -102,7 +103,7 @@ def etl_pipeline(input_file, output_path):
         logging.error(f"Error creating 'TotalAmount' column: {e}")
         raise
 
-    # Task 2.1(b): Create a new column 'OrderMonth'
+    # Create a new column 'OrderMonth' and keeping in the main df
     try:
         logging.info("Creating 'OrderMonth' column extracted from 'InvoiceDate'...")
         processor.create_order_month_column(invoice_date_col="InvoiceDate")
@@ -110,7 +111,7 @@ def etl_pipeline(input_file, output_path):
         logging.error(f"Error creating 'OrderMonth' column: {e}")
         raise
 
-    # Task 2.1(c): Calculate the monthly order total for each customer
+    # Calculate the monthly order total for each customer and save in a separate .csv file
     try:
         logging.info("Calculating monthly order total for each customer...")
         monthly_order_total_df = processor.calculate_monthly_order_total(customer_id_col="CustomerID")
@@ -119,7 +120,7 @@ def etl_pipeline(input_file, output_path):
         logging.error(f"Error calculating monthly order total: {e}")
         raise
 
-    # Task 2.1(d): Identify customers with consecutive orders
+    # Identify customers with consecutive orders and save in a separate .csv file
     try:
         logging.info("Identifying customers who placed orders in consecutive months...")
         consecutive_customers_df = processor.identify_customers_with_consecutive_orders(customer_id_col="CustomerID")
@@ -128,11 +129,12 @@ def etl_pipeline(input_file, output_path):
         logging.error(f"Error identifying customers with consecutive orders: {e}")
         raise
 
-    # Task 2.1(e): Combine everything into one CSV (customerid, totalrevenue, monthly order total, consecutive order tag)
+    # Combine into one CSV (customerid, totalrevenue, monthly order total, consecutive order tag [true|false] )
     try:
         logging.info("Combining customer data into one CSV...")
 
         # Rename 'OrderMonth' in one of the DataFrames to avoid column name conflict during the join
+        # to be reviewed
         monthly_order_total_df = monthly_order_total_df.withColumnRenamed("OrderMonth", "MonthlyOrder")
 
         combined_df = customer_revenue_df.alias('a') \
@@ -150,9 +152,7 @@ def etl_pipeline(input_file, output_path):
 
 
 if __name__ == "__main__":
-    # File path to input CSV file and output path
     input_file = "data/processed/online_retail.csv"
     output_path = "data/processed/final_output"
 
-    # Run the ETL pipeline
     etl_pipeline(input_file, output_path)

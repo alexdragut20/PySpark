@@ -20,20 +20,19 @@ class DataConverter:
 
     def convert_excel_to_csv(self):
         try:
-            # Check if input file exists
+            # Check if the input file exists
             if not os.path.exists(self.input_filepath):
                 raise FileNotFoundError(f"Input file not found: {self.input_filepath}")
 
-            # Read Excel file
+            # Read .xlsx file with pandas
             data = pd.read_excel(self.input_filepath)
 
-            # Convert to CSV and save
+            # Convert the .xsls to .csv
             data.to_csv(self.output_filepath, index=False)
             print(f"File successfully converted to CSV and saved as {self.output_filepath}")
         except Exception as e:
             print(f"Error during conversion: {e}")
 
-# Define file paths
 input_file = "../../data/raw/online_retail.xlsx"
 output_file = "../../data/processed/online_retail.csv"
 

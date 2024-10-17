@@ -6,7 +6,7 @@ from pyspark.sql.functions import row_number, lag
 from pyspark.sql import functions as F
 import logging
 
-# Configure logging
+# logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -17,11 +17,12 @@ class DataCleaner:
         :param input_filepath: Path to the CSV file containing the raw data.
         """
         self.input_filepath = input_filepath
-        # Initialize Spark session
+        # Initializing spark
+        # TBD config file
         self.spark = SparkSession.builder \
             .appName("DataCleaningAndProcessing") \
             .getOrCreate()
-        # Set log level to ERROR to suppress unnecessary warnings
+        # Set log level to ERROR to suppress unnecessary warnings - not doing what is supposed to
         self.spark.sparkContext.setLogLevel("ERROR")
 
     def read_csv(self):
@@ -39,10 +40,10 @@ class DataCleaner:
         :param invoice_date_col: Name of the Invoice Date column
         :return: Cleaned DataFrame.
         """
-        # Cast CustomerID to IntegerType to remove .0 from double type
+        # Convert (Cast) CustomerID to IntegerType to remove .0 from DoubleType
         df = df.withColumn(customer_id_col, col(customer_id_col).cast(IntegerType()))
 
-        # Cast CustomerID to string to handle 'Unknown'
+        # Convert (Cast) CustomerID to string to allow 'Unknown' value
         df = df.withColumn(customer_id_col, col(customer_id_col).cast("string"))
 
         # Fill null values
@@ -62,7 +63,7 @@ class DataCleaner:
     def show_summary(self, df):
         """
         Display the schema and a few rows for a quality check.
-        :param df: DataFrame to show the summary of.
+        :param df: DataFrame to show the summary of. (first 5)
         """
         df.printSchema()
         df.show(5)
@@ -87,7 +88,7 @@ class DataProcessor:
         # Calculate revenue per row (Quantity * UnitPrice)
         revenue_df = self.df.withColumn("Revenue", col(quantity_col) * col(unit_price_col))
 
-        # Calculate total revenue per customer
+        # Calculate total revenue per customer by grouping per customer_id and aggregating the Revenue values
         customer_revenue = revenue_df.groupBy(customer_id_col).agg(
             round(spark_sum("Revenue"), 2).alias("TotalRevenue")
         )
@@ -203,9 +204,8 @@ class DataProcessor:
 
 
 
-# Main block for testing
+
 if __name__ == "__main__":
-    # File paths
     input_file = "../../data/processed/online_retail.csv"
 
     # Initialize DataCleaner and clean the data
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     # Initialize DataProcessor with the cleaned DataFrame
     processor = DataProcessor(cleaned_df)
 
-    # Task 1.2(a): Calculate total revenue per customer
+    # Calculate total revenue per customer
     print("Calculating total revenue per customer...")
     customer_revenue_df = processor.calculate_total_revenue_per_customer(
         customer_id_col="CustomerID", quantity_col="Quantity", unit_price_col="UnitPrice"
@@ -234,21 +234,21 @@ if __name__ == "__main__":
     top_5_customers = customer_revenue_df.orderBy(col("TotalRevenue").desc()).limit(5)
     top_5_customers.show()
 
-    # Task 1.2(b): Determine the most popular product by quantity sold for each country
+    # Determine the most popular product by quantity sold for each country
     print("Determining the most popular product by quantity sold for each country...")
     most_popular_product_df = processor.most_popular_product_per_country(
         product_col="StockCode", country_col="Country", quantity_col="Quantity"
     )
     most_popular_product_df.show()
 
-    # Task 1.2(c): Calculate the monthly sales trend
+    # Calculate the monthly sales trend
     print("Calculating the monthly sales trend...")
     monthly_sales_trend_df = processor.calculate_monthly_sales_trend(
         invoice_date_col="InvoiceDate", quantity_col="Quantity", unit_price_col="UnitPrice"
     )
     monthly_sales_trend_df.show()
 
-    # Task 2.1(a): Create a new column 'TotalAmount'
+    # Create a new column 'TotalAmount'
     print("Creating 'TotalAmount' column by multiplying 'Quantity' and 'UnitPrice'...")
     processor.create_total_amount_column(quantity_col="Quantity", unit_price_col="UnitPrice")
 
@@ -256,7 +256,7 @@ if __name__ == "__main__":
     print("Displaying the first 5 rows after adding the 'TotalAmount' column...")
     processor.df.show(5)
 
-    # Task 2.1(b): Create a new column 'OrderMonth'
+    # Create a new column 'OrderMonth'
     print("Creating 'OrderMonth' column extracted from 'InvoiceDate'...")
     processor.create_order_month_column(invoice_date_col="InvoiceDate")
 
@@ -264,12 +264,12 @@ if __name__ == "__main__":
     print("Displaying the first 5 rows after adding the 'OrderMonth' column...")
     processor.df.show(5)
 
-    # Task 2.1(c): Calculate the monthly order total for each customer
+    # Calculate the monthly order total for each customer
     print("Calculating the monthly order total for each customer...")
     monthly_order_total_df = processor.calculate_monthly_order_total(customer_id_col="CustomerID")
     monthly_order_total_df.show()
 
-    # Task 2.1(d): Identify customers who have placed orders in consecutive months
+    # Identify customers who have placed orders in consecutive months
     print("Identifying customers who placed orders in consecutive months...")
     consecutive_orders_df = processor.identify_customers_with_consecutive_orders(customer_id_col="CustomerID")
     consecutive_orders_df.show()

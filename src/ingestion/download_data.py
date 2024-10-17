@@ -13,14 +13,13 @@ Assumptions:
 import requests
 import os
 
-# Define the URL for the dataset and the local filename
 dataset_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00352/Online%20Retail.xlsx"
 local_filename = "../../data/raw/online_retail.xlsx"
 
-# Create the directory if it doesn't exist
+# Create the output directory if not found
 os.makedirs(os.path.dirname(local_filename), exist_ok=True)
 
-# Download the dataset
+# Download the dataset using requests
 response = requests.get(dataset_url)
 with open(local_filename, 'wb') as file:
     file.write(response.content)
