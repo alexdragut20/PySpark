@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "online-retail-etl"
+version = "0.1.0"
+description = "Production-style PySpark ETL pipeline for the UCI Online Retail dataset"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Alexandru Dragut" }
+]
+dependencies = [
+  "pyspark>=3.5.2,<4.0.0",
+  "pandas>=2.2.2,<3.0.0",
+  "openpyxl>=3.1.5,<4.0.0",
+  "requests>=2.32.3,<3.0.0"
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.3.4,<9.0.0"]
+
+[project.scripts]
+online-retail-etl = "online_retail_etl.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
